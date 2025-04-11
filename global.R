@@ -1,0 +1,22 @@
+### Load required libraries
+library(dplyr)
+library(tidyr)
+library(readr)
+library(stringr)
+library(stringi)
+library(seqinr)
+library(shiny)
+library(DT)
+library(Rcpp)
+library(rlang)
+library(scales)
+library(withr)
+library(ggplot2)
+library(ggrepel)
+library(shinyBS)
+library(shinyjs)
+library(shinyWidgets)
+library(data.table)
+##############################################################
+### Load custom functions
+source("functions.R")
