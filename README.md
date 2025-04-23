@@ -37,17 +37,13 @@ The DIAnn Post-Processing Tool is designed to enhance the accuracy and reliabili
 ### Steps
 1. Clone this repository:
    ```bash
-   git clone https://github.com/your-username/DIAnn-PostProcessing-Tool.git
+   git clone https://github.com/amrelguoshy-BBC/DIA-NN_postprocessing_tool.git
 2. Open the project in RStudio.
 
 3. Install the required R packages by running the following command in the R console:
 install.packages(c("shiny", "dplyr", "ggplot2", "data.table", "shinyjs", "DT", "ggrepel"))
 4. Launch the Shiny app by running:
 shiny::runApp("path/to/DIAnn-PostProcessing-Tool")
-Alternatively, you can use the Docker image for a containerized deployment:
-
-docker pull your-dockerhub-username/diann-postprocessing-tool
-docker run -p 3838:3838 your-dockerhub-username/diann-postprocessing-tool
 
 Usage
 Upload Files:
