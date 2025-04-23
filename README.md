@@ -99,8 +99,7 @@ If you use this tool in your research, please cite the following publication:
 [Your Manuscript Title]. [Your Name et al.]. [Journal Name]. [Year].
 DOI: [Insert DOI]
 
-GitHub Repository: https://github.com/your-username/DIAnn-PostProcessing-Tool
-
+GitHub Repository: https://github.com/amrelguoshy-BBC/DIA-NN_postprocessing_tool
 Contact
 For questions or feedback, please contact:
 Amr Elguoshy

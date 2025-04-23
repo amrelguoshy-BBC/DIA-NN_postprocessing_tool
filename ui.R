@@ -131,8 +131,8 @@ ui <- fluidPage(
   ),
   
   div(class = "title-container",
-      div(class = "title", "Quantitative Urine Proteomics Analysis"),
-      div(class = "subtitle", "Mass Spectrometry Data Processing and Visualization")
+      div(class = "title", "Shiny Application for Enhanced Post-Processing Analysis and Visualization of Quantitative Proteomics and Peptidomics by MS and DIA-NN analysis"),
+      #div(class = "subtitle", "Mass Spectrometry Data Processing and Visualization")
   ),
   
   useShinyjs(),
@@ -152,7 +152,7 @@ ui <- fluidPage(
             
             fluidRow(
               column(7, 
-                actionButton("use_sample_lib", "Use Sample Data", 
+                actionButton("use_sample_lib", "Use Library Sample", 
                            class = "btn btn-primary btn-block",
                            icon = icon("database"))),
               column(5,
@@ -166,7 +166,7 @@ ui <- fluidPage(
             
             fluidRow(
               column(7,
-                actionButton("use_sample_diann_report", "use Sample DIA-NN", 
+                actionButton("use_sample_diann_report", "use DIA-NN Report Sample", 
                            class = "btn btn-primary btn-block",
                            icon = icon("file-import"))),
               column(5,
@@ -199,10 +199,12 @@ ui <- fluidPage(
             div(class = "log-panel",
                 verbatimTextOutput("msg1"),
                 verbatimTextOutput("msg2")
-            )
+                            )
           ),
           
           #wellPanel(
+              
+
             #h4(icon("chart-bar"), " Summary Statistics"),
             #plotOutput("summary_plot", height = "250px")
           #)
@@ -257,10 +259,14 @@ ui <- fluidPage(
         )
       ),
       fluidRow(
-        column(width = 3, wellPanel(plotOutput("fig1", height = "400px"))),
-        column(width = 3, wellPanel(plotOutput("fig2", height = "400px"))),
-        column(width = 3, wellPanel(plotOutput("fig3", height = "400px"))),
-        column(width = 3, wellPanel(plotOutput("fig4", height = "400px")))
+        column(width = 3, wellPanel(div(style = "overflow-x: auto;",
+                shinycssloaders::withSpinner(plotOutput("fig1", height = "400px"))))),
+        column(width = 3, wellPanel(div(style = "overflow-x: auto;",
+                shinycssloaders::withSpinner(plotOutput("fig2", height = "400px"))))),
+        column(width = 3, wellPanel(div(style = "overflow-x: auto;",
+                shinycssloaders::withSpinner(plotOutput("fig3", height = "400px"))))),
+        column(width = 3, wellPanel(div(style = "overflow-x: auto;",
+                shinycssloaders::withSpinner(plotOutput("fig4", height = "400px")))))
       ),
       fluidRow(
         column(width = 8, offset = 2,
@@ -278,14 +284,14 @@ ui <- fluidPage(
           wellPanel(
             h4("Library 1 Configuration"),
             fluidRow(
-              column(6, actionButton("use_sample_cos_sim_data_lib1", "Sample Data", class = "btn btn-primary btn-block")),
-              column(6, actionButton("upload_own_cos_sim_data_lib1", "Upload Data", class = "btn btn-primary btn-block"))
+              column(6, actionButton("use_sample_cos_sim_data_lib1", "Sample cos_sim1", class = "btn btn-primary btn-block")),
+              column(6, actionButton("upload_own_cos_sim_data_lib1", "Upload cos_sim1", class = "btn btn-primary btn-block"))
             ),
             uiOutput("file_ui_cos_sim_data_lib1"),
             selectInput("lib1_type", "Library Type", choices = c("DDA", "DIA")),
             fluidRow(
-              column(6, actionButton("use_sample_lib1", "Sample Library", class = "btn btn-primary btn-block")),
-              column(6, actionButton("upload_own_lib1", "Upload Library", class = "btn btn-primary btn-block"))
+              column(6, actionButton("use_sample_lib1", "Sample Library1", class = "btn btn-primary btn-block")),
+              column(6, actionButton("upload_own_lib1", "Upload Library1", class = "btn btn-primary btn-block"))
             ),
             uiOutput("file_ui_lib1"),
             actionButton("compare", "Compare Libraries", 
@@ -297,14 +303,14 @@ ui <- fluidPage(
           wellPanel(
             h4("Library 2 Configuration"),
             fluidRow(
-              column(6, actionButton("use_sample_cos_sim_data_lib2", "Sample Data", class = "btn btn-primary btn-block")),
-              column(6, actionButton("upload_own_cos_sim_data_lib2", "Upload Data", class = "btn btn-primary btn-block"))
+              column(6, actionButton("use_sample_cos_sim_data_lib2", "Sample cos_sim2", class = "btn btn-primary btn-block")),
+              column(6, actionButton("upload_own_cos_sim_data_lib2", "Upload cos_sim2", class = "btn btn-primary btn-block"))
             ),
             uiOutput("file_ui_cos_sim_data_lib2"),
             selectInput("lib2_type", "Library Type", choices = c("DIA", "DDA")),
             fluidRow(
-              column(6, actionButton("use_sample_lib2", "Sample Library", class = "btn btn-primary btn-block")),
-              column(6, actionButton("upload_own_lib2", "Upload Library", class = "btn btn-primary btn-block"))
+              column(6, actionButton("use_sample_lib2", "Sample Library2", class = "btn btn-primary btn-block")),
+              column(6, actionButton("upload_own_lib2", "Upload Library2", class = "btn btn-primary btn-block"))
             ),
             uiOutput("file_ui_lib2"),
             actionButton("retrieve", "Retrieve Spectra", 
@@ -325,9 +331,9 @@ ui <- fluidPage(
         )
       ),
       fluidRow(
-        column(width = 4, wellPanel(plotOutput("fig6", height = "350px"))),
-        column(width = 4, wellPanel(plotOutput("fig7", height = "350px"))),
-        column(width = 4, wellPanel(plotOutput("fig8", height = "350px")))
+        column(width = 3, wellPanel(plotOutput("fig6", height = "350px"))),
+        column(width = 6, wellPanel(plotOutput("fig7", height = "350px"))),
+        column(width = 3, wellPanel(plotOutput("fig8", height = "350px")))
       ),
       fluidRow(
         column(width = 4, offset = 4,

@@ -7,20 +7,23 @@ server <- function(input, output, session){
   data_cos_sim_lib1 <- reactiveVal()
   data_cos_sim_lib2 <- reactiveVal()
   data_diann_report <- reactiveVal()
-  global <- reactiveValues(diann_report = NULL, cosine_values_flt_no_rdn = NULL, diann_report_SM = NULL, diann_report_prt = NULL, diann_report_pep = NULL, proc_lib_notify = NULL, proc_diann_report_notify = NULL)
+  data_diann_report_1st <- reactiveVal()
+  global <- reactiveValues(diann_report = NULL, cosine_values_flt_no_rdn = NULL, diann_report_SM = NULL, diann_report_prt = NULL, diann_report_pep = NULL, proc_lib_notify = NULL, proc_diann_report_notify = NULL, reset_notify = NULL, reset_notify_dda_SM = NULL, reset_notify_dia_SM = NULL, reset_notify_dda_usr = NULL, reset_notify_dia_usr = NULL, reset_notify_diann_report_SM = NULL, reset_notify_diann_report_usr = NULL, start_proc = NULL, reset_notify_dda1_SM = NULL, reset_notify_dda2_SM = NULL, reset_notify_dda1_usr = NULL, reset_notify_dda2_usr = NULL, reset_notify_dia1_SM = NULL, reset_notify_dia2_SM = NULL, reset_notify_dia1_usr = NULL, reset_notify_dia2_usr = NULL, reset_notify_cos_sim1_SM = NULL, reset_notify_cos_sim1_usr = NULL, reset_notify_cos_sim2_SM = NULL, reset_notify_cos_sim2_usr = NULL, notify_cos_sim_compare = NULL)
   
   # Paths to the sample data RDS files
-  sample_data_dda_path <- "C:\\Users\\User\\Desktop\\diann_postprocess\\sample_data_dda_lib.rds"
-  sample_data_dia_path <- "C:\\Users\\User\\Desktop\\diann_postprocess\\sample_data_dia_lib.rds"
-  sample_data_diann_report_path <- "C:\\Users\\User\\Desktop\\diann_postprocess\\sample_data_diann_report.rds"
-  sample_cos_sim_data_lib1_path <- "C:\\Users\\User\\Desktop\\diann_postprocess\\cos_sim_data_lib1.RDS"
-  sample_cos_sim_data_lib2_path <- "C:\\Users\\User\\Desktop\\diann_postprocess\\cos_sim_data_lib2.rds"
+  sample_data_dda_path <- "data\sample_data_dda_lib.rds"
+  sample_data_dia_path <- "data\sample_data_dia_lib.rds"
+  sample_data_diann_report_path <- "data\sample_data_diann_report.rds"
+  sample_data_diann_report_1st_path <- "data\sample_data_diann_report_1st.rds"
+  sample_cos_sim_data_lib1_path <- "data\sample_data_cosine_similarity_scores_dda.RDS"
+  sample_cos_sim_data_lib2_path <- "data\sample_data_cosine_similarity_scores_dia.rds"
   
   
   # Reactive values to track whether sample data is used
   use_sample_dda <- reactiveVal(FALSE)
   use_sample_lib <- reactiveVal(FALSE)
   use_sample_diann_report <- reactiveVal(FALSE)
+  #use_sample_diann_report_1st <- reactiveVal(FALSE)
   use_sample_cos_sim_data_lib1 <- reactiveVal(FALSE)
   use_sample_cos_sim_data_lib2 <- reactiveVal(FALSE)
 
@@ -33,7 +36,7 @@ server <- function(input, output, session){
     updateSelectizeInput(session, "SM", choices = character(0), selected = "")
     updateSelectizeInput(session, "prt_acc", choices = character(0), selected = "")
     updateSelectizeInput(session, "pep_seq", choices = character(0), selected = "")
-
+    
     output$msg4 <- renderText({NULL})
     output$msg5 <- renderText({NULL})
     output$msg6 <- renderText({NULL})
@@ -48,6 +51,24 @@ server <- function(input, output, session){
     # Reset cosine similarity filter slider
     updateSliderInput(session, "cos", value = c(0, 1))
   }
+ # Observe the select input "lib_type" and reset outputs
+  observeEvent(input$lib_type, {
+    global$reset_notify <- showNotification(
+
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Resetting workspace...
+           </div>"),
+        duration = 5
+
+        ,
+        type = "message"
+        )
+    use_sample_lib(FALSE)
+    use_sample_diann_report(FALSE)
+    reset_spectrum_similarity_outputs()
+    output$msg1 <- renderText({NULL})
+    output$msg2 <- renderText({NULL})
+  })
   
   # Observe all data loading buttons and reset outputs
   observeEvent(input$use_sample_lib, {
@@ -73,11 +94,28 @@ server <- function(input, output, session){
   # Load sample data when the action button is clicked
   observeEvent(input$use_sample_lib, {
     if (input$lib_type == "DDA") {
+        global$reset_notify_dda_SM <- showNotification(
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Resetting workspace,loading and processing sample DDA library data...
+           </div>"),
+          duration = NULL
+          ,
+          type = "message"
+  )
         sample_data_dda_lib <- readRDS(sample_data_dda_path)
         data_dda(sample_data_dda_lib)
         use_sample_lib(TRUE)
      }
     else{
+         global$reset_notify_dia_SM <- showNotification(
+
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Resetting workspace, loading and processing sample DIA  data...
+           </div>"),
+        duration = NULL
+        ,
+        type = "message"
+        )
         sample_data_dia_lib <- readRDS(sample_data_dia_path)
         data_dia(sample_data_dia_lib)
         use_sample_lib(TRUE)
@@ -86,11 +124,36 @@ server <- function(input, output, session){
   
   # Load sample DIA-NN report when the action button is clicked
   observeEvent(input$use_sample_diann_report, {
-    sample_data_diann_report <- readRDS(sample_data_diann_report_path)
-    data_diann_report(sample_data_diann_report)
-    use_sample_diann_report(TRUE)
+    if (input$lib_type == "DDA") {
+        global$reset_notify_diann_report_SM <- showNotification(
+
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Resetting workspace, loading and processing sample DIAnn report data...
+           </div>"),
+        duration = NULL
+        ,
+        type = "message"
+        )  
+        sample_data_diann_report_1st <-        readRDS(sample_data_diann_report_1st_path)
+        data_diann_report_1st(sample_data_diann_report_1st)
+        use_sample_diann_report(TRUE)
+       
+     }
+    else{
+        global$reset_notify_diann_report_SM <- showNotification(
+
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Resetting workspace, loading and processing sample DIAnn report data...
+           </div>"),
+        duration = NULL
+        ,
+        type = "message"
+        ) 
+        sample_data_diann_report <- readRDS(sample_data_diann_report_path)
+        data_diann_report(sample_data_diann_report)
+        use_sample_diann_report(TRUE)
+       }
   })
-  
   # Allow user to switch back to uploading their own data
   observeEvent(input$upload_own_lib, {
     use_sample_lib(FALSE)
@@ -126,46 +189,62 @@ add_log_message <- function(msg) {
     cat(msg, "\n")  # Log to console (or replace with actual logging method)
 }
 
-# Reactive value to store processed library data
+# Reactive value to process and store library data
 lib_proc <- reactive({
     if (use_sample_lib()) {
-        
         if (input$lib_type == "DDA") {
-            #output$pep_info1 <- DT::renderDataTable({NULL})
             req(data_dda())
             processed_lib <- process_lib(data_dda(), "DDA", input$base)
+            on.exit(removeNotification(global$reset_notify_dda_SM))
         } else {
-            #output$pep_info1 <- DT::renderDataTable({NULL})
             req(data_dia())
             processed_lib <- process_lib(data_dia(), "DIA", input$base)
+            on.exit(removeNotification(global$reset_notify_dia_SM))
         }
     } else {
-        #output$pep_info1 <- DT::renderDataTable({NULL})
         req(input$lib)
         output$msg1 <- renderText(NULL)
         # Validate library file based on type
         lib_path <- input$lib$datapath
         if (input$lib_type == "DDA") {
+           global$reset_notify_dda_usr <- showNotification(
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Resetting workspace, loading and processing DDA library data from user...
+           </div>"),
+          duration = NULL
+          ,
+          type = "message"
+         )
             is_DDA_lib_valid <- validate_DDA_lib(lib_path)
             if (is.character(is_DDA_lib_valid)) {
                 add_log_message(is_DDA_lib_valid)
                 output$msg1 <- renderText(is_DDA_lib_valid)  # Show error message in UI
+                on.exit(removeNotification(global$reset_notify_dda_usr))
                 return(NULL)  # Stop further processing
             }
             lib <- read_csv(lib_path)
         } else {
+            global$reset_notify_dia_usr <- showNotification(
+            HTML("<div style='font-size:16px;'>
+            <i class='fas fa-cogs'></i> Resetting workspace, loading and processing DIA data from user...
+            </div>"),
+            duration = NULL
+            ,
+            type = "message"
+         )
             is_DIA_lib_valid <- validate_DIA_lib(lib_path)
             if (is.character(is_DIA_lib_valid)) {
                 add_log_message(is_DIA_lib_valid)
                 output$msg1 <- renderText(is_DIA_lib_valid)  # Show error message in UI
+                on.exit(removeNotification(global$reset_notify_dia_usr))
                 return(NULL)
             }
             lib <- read_delim(lib_path)
         }
-        global$proc_lib_notify <- showNotification(HTML("################################<br>The processing of library file is IN PROCESS<br>################################"), duration = NULL, type = "message")
         processed_lib <- process_lib(lib, input$lib_type, input$base)
+        on.exit(removeNotification(global$reset_notify_dda_usr), add = TRUE)
+        on.exit(removeNotification(global$reset_notify_dia_usr), add = TRUE)
     }
-    
     return(processed_lib)
 })
 
@@ -181,8 +260,6 @@ observeEvent(lib_proc(), {
  ########################### 
   # Display message based on processed library data
   observeEvent(lib_proc(), {
-    removeNotification(global$proc_lib_notify
-)
     lib_unique_pep <- length(unique(lib_proc()$ModifiedPeptide))
     lib_unique_pep_chr <- length(unique(paste(lib_proc()$ModifiedPeptide, lib_proc()$lib_PrecursorCharge)))
     lib_unique_prot <- length(unique(lib_proc()$UniprotID))
@@ -195,31 +272,43 @@ observeEvent(lib_proc(), {
   # Reactive value to store processed DIA-NN report data
   diann_report_proc <- reactive({
     if (use_sample_diann_report()) { 
-      #output$pep_info1 <- DT::renderDataTable({NULL})
-      req(data_diann_report())
-      diann_report_proc <- process_diann_report(data_diann_report(), input$base)
+       if (input$lib_type == "DDA") {
+            req(data_diann_report_1st())
+            diann_report_proc <- process_diann_report(data_diann_report_1st(), input$base)
+            on.exit(removeNotification(global$reset_notify_diann_report_SM))
+        } else {
+            req(data_diann_report())
+            diann_report_proc <- process_diann_report(data_diann_report(), input$base)
+            on.exit(removeNotification(global$reset_notify_diann_report_SM))
+        }
     } else {
-
-      #output$pep_info1 <- DT::renderDataTable({NULL})
       req(input$diann_report)
       output$msg2 <- renderText(NULL)
       report_path <- input$diann_report$datapath
+      global$reset_notify_diann_report_usr <- showNotification(
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Resetting workspace,loading and processing DIAnn report user data...
+           </div>"),
+        duration = NULL
+        ,
+        type = "message"
+        )
       is_DIAnn_report_valid <- validate_DIAnn_report(report_path)
             if (is.character(is_DIAnn_report_valid)) {
                 add_log_message(is_DIAnn_report_valid)
-                output$msg2 <- renderText(is_DIAnn_report_valid)  # Show error message in UI
+                output$msg2 <- renderText(is_DIAnn_report_valid)  # Show error message in UI     
+                on.exit(removeNotification(global$reset_notify_diann_report_usr))                    
                 return(NULL)  # Stop further processing
             }
-      global$proc_diann_report_notify <- showNotification(HTML("################################<br>The processing of DIA-nn report file is IN PROCESS<br>################################"), duration = NULL, type = "message")
       global$diann_report <- read_file_based_on_extension(input$diann_report$datapath)
       diann_report_proc <- process_diann_report(global$diann_report, input$base)
+      on.exit(removeNotification(global$reset_notify_diann_report_usr))
     }
     return(diann_report_proc)
   })
   
   # Display message based on processed DIA-NN report data
   observeEvent(diann_report_proc(), {
-    removeNotification(global$proc_diann_report_notify)
     diann_report_unique_pep <- length(unique(diann_report_proc()$ModifiedPeptide))
     diann_report_unique_pep_chr <- length(unique(paste(diann_report_proc()$ModifiedPeptide, diann_report_proc()$diann_report_PrecursorCharge)))
     diann_report_unique_prot <- length(unique(diann_report_proc()$UniprotID))
@@ -231,15 +320,21 @@ observeEvent(lib_proc(), {
 ################################################################################################################################################################################################################################################
       ###########fun3,4
         calculated_cos_sim <- eventReactive(input$spec_sim,{
-            #req(input$tol)
-            #req(input$base)
              req(diann_report_proc())
              lib_proc()
+             global$start_proc <- showNotification(
+             HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> start aligning the library and diann report data. then, calculating the consine similarity scores...
+           </div>"),
+           duration = NULL
+           ,
+           type = "message"
+           )
              aligned_diann_report_lib_frgs <- align_diann_report_lib_frgs(diann_report_proc(), lib_proc(), input$tol)
              calculated_cos_sim <- calculate_cos_sim(aligned_diann_report_lib_frgs)
             return(calculated_cos_sim)
     })
-      #####
+        #####
         observeEvent(calculated_cos_sim(), {
         global$calculated_cos_sim_no_rdn <- calculated_cos_sim()%>%
         filter(!is.na(lib_PrecursorCharge))%>%
@@ -248,6 +343,7 @@ observeEvent(lib_proc(), {
         output$pep_info1 <- DT::renderDataTable({
         global$calculated_cos_sim_no_rdn
         }, server = FALSE)
+      on.exit(removeNotification(global$start_proc))
       })
       #########
        ######flt
@@ -278,7 +374,6 @@ cosine_similarity)%>%
   )
 #############
  observeEvent(cosine_values_flt(),{
-               #updateTabsetPanel(session, "tabs", selected = "tab2")
                choices1 <- unique(cosine_values_flt()$File.Name)
                updateSelectizeInput(inputId = "SM", choices = choices1,  selected = choices1[1])
               output$msg4 <- renderText({
@@ -312,88 +407,102 @@ cosine_similarity)%>%
                filter(cosine_values_prt_flt(), ModifiedPeptide == input$pep_seq)
           })
        ####
-       observeEvent(input$SM, {
+####################################################################################################################################################################
+#-------------------------------
+# 1. Plotting helper function
+#-------------------------------
+render_all_figures <- function(data_all, data_protein = NULL, data_peptide = NULL, key_expr) {
+  
+  # Reusable plotting function for a single figure
+  plot_base <- function(x, y, xlab, ylab) {
+    ggplot(data_all, aes_string(x, y)) +
+      geom_point(color = "grey", shape = 21, alpha = 0.7) +
+      {if (!is.null(data_protein)) geom_point(data = data_protein, aes_string(x, y), color = "red", size = 2)} +
+      {if (!is.null(data_peptide)) geom_point(data = data_peptide, aes_string(x, y), color = "blue", size = 3)} +
+      labs(x = xlab, y = ylab) +
+      theme_bw() +
+      theme(text = element_text(size = 16, face = "bold")) +
+      theme(axis.text.x = element_text(angle = 90))
+  }
+  
+  # All 4 plots
+  output$fig1 <- renderCachedPlot({
+    plot_base("RT", "iRT", "RT", "iRT")
+  }, cacheKeyExpr = { key_expr })
+  
+  output$fig2 <- renderCachedPlot({
+    plot_base("IM", "iIM", "IM", "iIM")
+  }, cacheKeyExpr = { key_expr })
+  
+  output$fig3 <- renderCachedPlot({
+    plot_base("Q.Value", "PEP", "Q.Value", "PEP")
+  }, cacheKeyExpr = { key_expr })
+  
+  output$fig4 <- renderCachedPlot({
+    plot_base("Ms1.Area", "Precursor.Quantity", "Ms1.Area", "Precursor.Quantity")
+  }, cacheKeyExpr = { key_expr })
+}
+####################################################################################################################################################################
+       observe({
+           req(input$SM)
+           global$diann_report_SM <- NULL
+           global$diann_report_prt <- NULL
+           global$diann_report_pep <- NULL 
            updateSelectizeInput(inputId = "pep_seq", choices = unique(cosine_values_SM_flt()$ModifiedPeptide), selected = "")
            updateSelectizeInput(inputId = "prt_acc", choices = c("----------", unique(cosine_values_SM_flt()$UniprotID)), selected = "----------")
            ########
-          #####################################################################################################################################################
-           if (use_sample_diann_report()) {
-                req(data_diann_report())
-                global$diann_report_SM <- data_diann_report()[data_diann_report()$File.Name == input$SM, ]
-                output$fig1 <- renderCachedPlot({
-                      ggplot(global$diann_report_SM, aes(RT, iRT)) + geom_point(color = "grey", shape = 21) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-               },cacheKeyExpr = { input$SM })
-               output$fig2 <- renderCachedPlot({
-                     ggplot(global$diann_report_SM, aes(IM, iIM)) + geom_point(color = "grey", shape = 21) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-      },cacheKeyExpr = { input$SM })
-               output$fig3 <- renderCachedPlot({
-                     ggplot(global$diann_report_SM, aes(Q.Value, PEP)) + geom_point(color = "grey", shape = 21) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-               },cacheKeyExpr = { input$SM })
-               output$fig4 <- renderCachedPlot({
-                    ggplot(global$diann_report_SM, aes(Ms1.Area, Precursor.Quantity)) + geom_point(color = "grey", shape = 21) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-               },cacheKeyExpr = { input$SM })
-     }
-     else{
-           global$diann_report_SM <- global$diann_report[global$diann_report$File.Name == input$SM, ]
-           output$fig1 <- renderCachedPlot({
-                ggplot(global$diann_report_SM, aes(RT, iRT)) + geom_point(color = "grey", shape = 21) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-           },cacheKeyExpr = { input$SM })
-           output$fig2 <- renderCachedPlot({
-                ggplot(global$diann_report_SM, aes(IM, iIM)) + geom_point(color = "grey", shape = 21) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-           },cacheKeyExpr = { input$SM })
-           output$fig3 <- renderCachedPlot({
-                ggplot(global$diann_report_SM, aes(Q.Value, PEP)) + geom_point(color = "grey", shape = 21) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-           },cacheKeyExpr = { input$SM })
-           output$fig4 <- renderCachedPlot({
-               ggplot(global$diann_report_SM, aes(Ms1.Area, Precursor.Quantity)) + geom_point(color = "grey", shape = 21) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-           },cacheKeyExpr = { input$SM })
-   }
- })
-       ##
-       observeEvent(input$prt_acc, {
-       #####################################################################################################################################################
-          if(input$prt_acc == "----------"){
-               updateSelectizeInput(inputId = "pep_seq", choices = unique(cosine_values_SM_flt()$ModifiedPeptide), selected = "")
-          }else if(input$prt_acc != "----------"){
-               updateSelectizeInput(inputId = "pep_seq", choices = unique(cosine_values_prt_flt()$ModifiedPeptide), selected = "")
-              #output$msg6 <- renderText({
-                #  paste0("peptide sequence list was updated for selected protein; please select one peptide to visualize")
-               ######
-            if (use_sample_diann_report()) {
-               req(data_diann_report())
-               global$diann_report_SM <- data_diann_report()[data_diann_report()$File.Name == input$SM, ]
-               global$diann_report_prt <- global$diann_report_SM[global$diann_report_SM$Protein.Ids == input$prt_acc, ]
-               output$fig1 <- renderCachedPlot({
-                     ggplot(global$diann_report_SM, aes(RT, iRT)) + geom_point(color = "grey", shape = 21)+ geom_point(data = global$diann_report_prt, aes(RT, iRT), color = "red", size = 1.5) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-               },cacheKeyExpr = { paste(input$SM, input$prt_acc, Sys.time()) })
-               output$fig2 <- renderCachedPlot({
-                     ggplot(global$diann_report_SM, aes(IM, iIM)) + geom_point(color = "grey", shape = 21) + geom_point(data = global$diann_report_prt, aes(IM, iIM), color = "red", size = 1.5)+ theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-               },cacheKeyExpr = { paste(input$SM, input$prt_acc, Sys.time())  })
-               output$fig3 <- renderCachedPlot({
-                     ggplot(global$diann_report_SM, aes(Q.Value, PEP)) + geom_point(color = "grey", shape = 21) + geom_point(data = global$diann_report_prt, aes(Q.Value, PEP), color = "red", size = 1.5)+ theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-               },cacheKeyExpr = { paste(input$SM, input$prt_acc, Sys.time())  })
-               output$fig4 <- renderCachedPlot({
-                     ggplot(global$diann_report_SM, aes(Ms1.Area, Precursor.Quantity)) + geom_point(color = "grey", shape = 21) + geom_point(data = global$diann_report_prt, aes(Ms1.Area, Precursor.Quantity), color = "red", size = 1.5)+ theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-               },cacheKeyExpr = { paste(input$SM, input$prt_acc, Sys.time())  })
-           }
-           else{
-               global$diann_report_SM <- global$diann_report[global$diann_report$File.Name == input$SM, ]
-               global$diann_report_prt <- global$diann_report_SM[global$diann_report_SM$Protein.Ids == input$prt_acc, ]
-               output$fig1 <- renderCachedPlot({
-                     ggplot(global$diann_report_SM, aes(RT, iRT)) + geom_point(color = "grey", shape = 21)+ geom_point(data = global$diann_report_prt, aes(RT, iRT), color = "red", size = 1.5) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-               },cacheKeyExpr = { paste(input$SM, input$prt_acc, Sys.time())  })
-               output$fig2 <- renderCachedPlot({
-                     ggplot(global$diann_report_SM, aes(IM, iIM)) + geom_point(color = "grey", shape = 21) + geom_point(data = global$diann_report_prt, aes(IM, iIM), color = "red", size = 1.5)+ theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-               },cacheKeyExpr = { paste(input$SM, input$prt_acc, Sys.time())  })
-               output$fig3 <- renderCachedPlot({
-                     ggplot(global$diann_report_SM, aes(Q.Value, PEP)) + geom_point(color = "grey", shape = 21) + geom_point(data = global$diann_report_prt, aes(Q.Value, PEP), color = "red", size = 1.5)+ theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-               },cacheKeyExpr = { paste(input$SM, input$prt_acc, Sys.time())  })
-               output$fig4 <- renderCachedPlot({
-                     ggplot(global$diann_report_SM, aes(Ms1.Area, Precursor.Quantity)) + geom_point(color = "grey", shape = 21) + geom_point(data = global$diann_report_prt, aes(Ms1.Area, Precursor.Quantity), color = "red", size = 1.5)+ theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-              },cacheKeyExpr = {paste(input$SM, input$prt_acc, Sys.time()) })
-         }
-     }
+#####################################################################################################################################################
+           isolate({
+               if (is.null(global$diann_report_SM)) {
+                   global$diann_report_SM <- if(use_sample_diann_report()) {
+                   if (input$lib_type == "DDA") {
+                       req(data_diann_report_1st())
+data_diann_report_1st()[data_diann_report_1st()$File.Name == input$SM, ]
+                    } else {
+                      req(data_diann_report())
+                      data_diann_report()[data_diann_report()$File.Name == input$SM, ]
+                    }
+                } else {
+                 global$diann_report[global$diann_report$File.Name == input$SM, ]
+                }
+           render_all_figures(
+                data_all = global$diann_report_SM,
+                data_protein = NULL,
+                data_peptide = NULL,
+               key_expr = paste(input$SM, Sys.time())
+           )
+      }
+  })
 })
+       ##
+       observe({
+  req(input$prt_acc)
+
+  global$diann_report_prt <- NULL  # Always reset
+  global$diann_report_pep <- NULL  # Reset peptide info as well
+
+  if (input$prt_acc == "----------") {
+    updateSelectizeInput(inputId = "pep_seq", choices = unique(cosine_values_SM_flt()$ModifiedPeptide), selected = "")
+    render_all_figures(
+      data_all = global$diann_report_SM,
+      data_protein = NULL,
+      data_peptide = NULL,
+      key_expr = paste(input$SM, Sys.time())
+    )
+  } else {
+    updateSelectizeInput(inputId = "pep_seq", choices = unique(cosine_values_prt_flt()$ModifiedPeptide), selected = "")
+    
+    global$diann_report_prt <- global$diann_report_SM[global$diann_report_SM$Protein.Ids == input$prt_acc, ]
+    
+    render_all_figures(
+      data_all = global$diann_report_SM,
+      data_protein = global$diann_report_prt,
+      data_peptide = NULL,
+      key_expr = paste(input$SM, input$prt_acc, Sys.time())
+    )
+  }
+})
+
 ##############
 cosine_values_flt_l <- reactive({
         selected_lib_data <- cosine_values_flt() %>%
@@ -406,84 +515,101 @@ cosine_values_flt_l <- reactive({
 selected_pep_data <- reactive({
                req(input$pep_seq)
                selected_pep_data <- cosine_values_flt_l() %>%
-                 filter(ModifiedPeptide == input$pep_seq,  File.Name == input$SM)%>%
-                 mutate(File.Name = str_wrap(File.Name, width = 10))
+               filter(ModifiedPeptide == input$pep_seq,  File.Name == input$SM)%>%
+                mutate(File.Name = str_wrap(File.Name, width = 10))
              
           })
 
 observeEvent(selected_pep_data(), {
-      req(input$pep_seq)
-      ########
-      
-      #####################################################################################################################################################
-      output$fig5 <- renderCachedPlot({ 
-               ggplot(selected_pep_data()[!is.na(selected_pep_data()$PrecursorCharge),], aes(FragmentMz, RelativeIntensity, col = as.factor(cat))) + geom_col(width = 1.5, position = "dodge") + geom_hline(yintercept = 0) + scale_color_manual(values = c("red", "darkblue")) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))  + ggtitle(paste(selected_pep_data()[!is.na(selected_pep_data()$PrecursorCharge),]$UniprotID[1], "\n", selected_pep_data()[!is.na(selected_pep_data()$PrecursorCharge),]$ModifiedPeptide[1])) + theme(plot.title = element_text(size = 15, hjust = 0.5, face = "bold")) + theme(legend.title = element_blank()) + geom_label_repel(aes(label = paste(FragmentType, FragmentSeriesNumber, sep = "")), size = 4) + facet_wrap(paste("Cosine similarity score = ",cosine_similarity) ~ paste("Peptide Charge = ", PrecursorCharge), labeller = label_wrap_gen(width = 35))
-      },cacheKeyExpr = { paste(input$SM, input$pep_seq, Sys.time()) })
-     if (use_sample_diann_report()) {
-             req(data_diann_report())
-             global$diann_report_SM <- data_diann_report()[data_diann_report()$File.Name == input$SM, ]
-             global$diann_report_pep <- global$diann_report_SM[global$diann_report_SM$Stripped.Sequence == input$pep_seq, ]
-             output$fig1 <- renderCachedPlot({
-                ggplot(global$diann_report_SM, aes(RT, iRT)) + geom_point(color = "grey", shape = 21)+ geom_point(data = global$diann_report_pep, aes(RT, iRT), color = "red", size = 1.5) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-             },cacheKeyExpr = { paste(input$SM, input$pep_seq, Sys.time())  })
-             output$fig2 <- renderCachedPlot({
-                ggplot(global$diann_report_SM, aes(IM, iIM)) + geom_point(color = "grey", shape = 21) + geom_point(data = global$diann_report_pep, aes(IM, iIM), color = "red", size = 1.5)+ theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-             },cacheKeyExpr = {paste(input$SM, input$pep_seq, Sys.time())  })
-             output$fig3 <- renderCachedPlot({
-                ggplot(global$diann_report_SM, aes(Q.Value, PEP)) + geom_point(color = "grey", shape = 21) + geom_point(data = global$diann_report_pep, aes(Q.Value, PEP), color = "red", size = 1.5)+ theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-             },cacheKeyExpr = { paste(input$SM, input$pep_seq, Sys.time())  })
-             output$fig4 <- renderCachedPlot({
-               ggplot(global$diann_report_SM, aes(Ms1.Area, Precursor.Quantity)) + geom_point(color = "grey", shape = 21) + geom_point(data = global$diann_report_pep, aes(Ms1.Area, Precursor.Quantity), color = "red", size = 1.5)+ theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-            },cacheKeyExpr = { paste(input$SM, input$pep_seq, Sys.time()) })
-    }
-    else{
-        global$diann_report_SM <- global$diann_report[global$diann_report$File.Name == input$SM, ]
-        global$diann_report_pep <-global$diann_report_SM[global$diann_report_SM$Stripped.Sequence == input$pep_seq, ]
-        
-        output$fig1 <- renderCachedPlot({
-                ggplot(global$diann_report_SM, aes(RT, iRT)) + geom_point(color = "grey", shape = 21)+ geom_point(data = global$diann_report_pep, aes(RT, iRT), color = "red", size = 1.5) + theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-       },cacheKeyExpr = { paste(input$SM, input$pep_seq, Sys.time())  })
-       output$fig2 <- renderCachedPlot({
-                ggplot(global$diann_report_SM, aes(IM, iIM)) + geom_point(color = "grey", shape = 21) + geom_point(data = global$diann_report_pep, aes(IM, iIM), color = "red", size = 1.5)+ theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-      },cacheKeyExpr = { paste(input$SM, input$pep_seq, Sys.time())  })
-       output$fig3 <- renderCachedPlot({
-                ggplot(global$diann_report_SM, aes(Q.Value, PEP)) + geom_point(color = "grey", shape = 21) + geom_point(data = global$diann_report_pep, aes(Q.Value, PEP), color = "red", size = 1.5)+ theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-      },cacheKeyExpr = { paste(input$SM, input$pep_seq, Sys.time()) })
-      output$fig4 <- renderCachedPlot({
-               ggplot(global$diann_report_SM, aes(Ms1.Area, Precursor.Quantity)) + geom_point(color = "grey", shape = 21) + geom_point(data = global$diann_report_pep, aes(Ms1.Area, Precursor.Quantity), color = "red", size = 1.5)+ theme_bw() + theme(text = element_text(size = 18, face = "bold"))
-       },cacheKeyExpr = { paste(input$SM, input$pep_seq, Sys.time())  })
-    }
-############################
-###########################
-#########################
-}) 
-############################################################################################################################
-####################################################################################################################################################################################
-####################################################################################################################################################################################
+  req(input$pep_seq)
 
-#############  
+  output$fig5 <- renderCachedPlot({
+    ggplot(selected_pep_data()[!is.na(selected_pep_data()$PrecursorCharge),],
+           aes(FragmentMz, RelativeIntensity, col = as.factor(cat))) +
+      geom_col(width = 1.5, position = "dodge") +
+      geom_hline(yintercept = 0) +
+      scale_color_manual(values = c("red", "darkblue")) +
+      theme_bw() +
+      theme(text = element_text(size = 18, face = "bold")) +
+      ggtitle(paste(
+        selected_pep_data()[!is.na(selected_pep_data()$PrecursorCharge), ]$UniprotID[1],
+        "\n",
+        selected_pep_data()[!is.na(selected_pep_data()$PrecursorCharge), ]$ModifiedPeptide[1]
+      )) +
+      theme(plot.title = element_text(size = 15, hjust = 0.5, face = "bold")) +
+      theme(legend.title = element_blank()) +
+      geom_label_repel(aes(label = paste(FragmentType, FragmentSeriesNumber, sep = "")), size = 4) +
+      facet_wrap(
+        paste("Cosine similarity score = ", cosine_similarity) ~
+        paste("Peptide Charge = ", PrecursorCharge),
+        labeller = label_wrap_gen(width = 35)
+      )
+  }, cacheKeyExpr = {
+    paste(input$SM, input$pep_seq, Sys.time())
+  })
+
+  global$diann_report_pep <- global$diann_report_SM[global$diann_report_SM$Stripped.Sequence == input$pep_seq, ]
+
+  render_all_figures(
+    data_all = global$diann_report_SM,
+    data_protein = global$diann_report_prt,
+    data_peptide = global$diann_report_pep,
+    key_expr = paste(input$SM, input$pep_seq, Sys.time())
+  )
+})
+
+################################################################################
+################################################################################################################################################################
+#######################################################################################################################################################tab3
+
   # Reactive values to track whether sample data is used
   use_sample_dda <- reactiveVal(FALSE)
   use_sample_lib1 <- reactiveVal(FALSE)
   use_sample_cos_sim_data_lib1 <- reactiveVal(FALSE)
   
-
   # Load sample data when the action button is clicked
   observeEvent(input$use_sample_lib1, {
     if (input$lib1_type == "DDA") {
+        global$reset_notify_dda1_SM <- showNotification(
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Loading and processing 1st sample DDA library...
+           </div>"),
+            duration = NULL
+
+        ,
+        type = "message"
+        )
         sample_data_dda_lib1 <- readRDS(sample_data_dda_path)
         data_dda(sample_data_dda_lib1)
         use_sample_lib1(TRUE)
+        
      }
     else{
+        global$reset_notify_dia1_SM <- showNotification(
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Loading and processing 1st sample DIA library...
+           </div>"),
+            duration = NULL
+        ,
+        type = "message"
+        )
         sample_data_dia_lib1 <- readRDS(sample_data_dia_path)
         data_dia(sample_data_dia_lib1)
         use_sample_lib1(TRUE)
+        
        }
   })
-  
-  # Load sample cosine similarity for library1 when the action button is clicked
+  ###############################################################################
+  # Load sample cosine similarity1 for library1 when the action button is clicked
   observeEvent(input$use_sample_cos_sim_data_lib1, {
+    global$reset_notify_cos_sim1_SM <- showNotification(
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Loading and processing 1st sample cosine similarity score file...
+           </div>"),
+            duration = NULL
+        ,
+        type = "message"
+        )
     sample_cos_sim_data_lib1 <- readRDS(sample_cos_sim_data_lib1_path)
     data_cos_sim_lib1(sample_cos_sim_data_lib1)
     use_sample_cos_sim_data_lib1(TRUE)
@@ -505,7 +631,7 @@ observeEvent(selected_pep_data(), {
     if (use_sample_lib1()) {
       tags$div(class = "alert alert-info", "Sample Data Loaded. Upload complete.")
     } else {
-      fileInput("lib1", "Upload your library file", accept = c(".csv", ".tsv"))
+      fileInput("lib1", "Upload your library file1", accept = c(".csv", ".tsv"))
     }
   })
   
@@ -531,10 +657,12 @@ lib1_proc <- reactive({
             req(data_dda())
             output$msg_lib1 <- renderText(NULL)
             processed_lib1 <- process_lib(data_dda(), "DDA", input$base)
+            on.exit(removeNotification(global$reset_notify_dda1_SM))
         } else {
             req(data_dia())
             output$msg_lib1 <- renderText(NULL)
             processed_lib1 <- process_lib(data_dia(), "DIA", input$base)
+            on.exit(removeNotification(global$reset_notify_dia1_SM))
         }
     } else {
         req(input$lib1)
@@ -542,27 +670,46 @@ lib1_proc <- reactive({
         # Validate library file based on type
         lib1_path <- input$lib1$datapath
         if (input$lib1_type == "DDA") {
+            global$reset_notify_dda1_usr <- showNotification(
+            HTML("<div style='font-size:16px;'>
+            <i class='fas fa-cogs'></i> Loading and processing DDA library as the 1st library from user...
+            </div>"),
+            duration = NULL
+            ,
+            type = "message"
+        )
             is_DDA_lib1_valid <- validate_DDA_lib(lib1_path)
             if (is.character(is_DDA_lib1_valid)) {
                 add_log_message(is_DDA_lib1_valid)
-                output$msg_lib1 <- renderText(is_DDA_lib1_valid)  # Show error message in UI
+                output$msg_lib1 <- renderText(is_DDA_lib1_valid)  # Show error message in UI 
+                on.exit(removeNotification(global$reset_notify_dda1_usr))
                 return(NULL)  # Stop further processing
             }
             lib1 <- read_file_based_on_extension(lib1_path)
         } else {
+            global$reset_notify_dia1_usr <- showNotification(
+            HTML("<div style='font-size:16px;'>
+            <i class='fas fa-cogs'></i> Loading and processing DIA library as 1st library from user...
+            </div>"),
+            duration = NULL
+            ,
+            type = "message"
+        )
             is_DIA_lib1_valid <- validate_DIA_lib(lib1_path)
             if (is.character(is_DIA_lib1_valid)) {
                 add_log_message(is_DIA_lib1_valid)
                 output$msg_lib1 <- renderText(is_DIA_lib1_valid)  # Show error message in UI
+                on.exit(removeNotification(global$reset_notify_dia1_usr))
                 return(NULL)
             }
             lib1 <- read_file_based_on_extension(lib1_path)
         }
-
         processed_lib1 <- process_lib(lib1, input$lib1_type, input$base)
     }
     
     return(processed_lib1)
+    on.exit(removeNotification(global$reset_notify_dda1_usr))
+    on.exit(removeNotification(global$reset_notify_dia1_usr)) 
 })
 
 # Observe validation messages separately to prevent errors inside reactive expressions
@@ -586,28 +733,39 @@ observeEvent(lib1_proc(), {
     })
   })
 ###########################################################
- # Reactive value to store DIA-NN report data without processing
+ # Reactive value to store cosine similarity data without processing
   cos_sim_data_lib1_proc <- reactive({
     if (use_sample_cos_sim_data_lib1()) {
       req(data_cos_sim_lib1())
-      cos_sim_data_lib1_proc <- data_cos_sim_lib1()  # Directly use raw report data
+      cos_sim_data_lib1_proc <- data_cos_sim_lib1()  # Directly use raw report data 
+      on.exit(removeNotification(global$reset_notify_cos_sim1_SM))
     } else {
       req(input$cos_sim_data_lib1)
       output$msg_cos1 <- renderText(NULL)
+      global$reset_notify_cos_sim1_usr <- showNotification(
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Loading and processing cosine similarity data file1 by user...
+           </div>"),
+            duration = NULL
+        ,
+        type = "message"
+        )
       cos_sim_data_lib1_path <- input$cos_sim_data_lib1$datapath
       is_cos_sim_data_lib1_valid <- validate_cos_sim_data_lib(cos_sim_data_lib1_path)
             if (is.character(is_cos_sim_data_lib1_valid)) {
                 add_log_message(is_cos_sim_data_lib1_valid)
                 output$msg_cos1 <- renderText(is_cos_sim_data_lib1_valid)  # Show error message in UI
+                on.exit(removeNotification(global$reset_notify_cos_sim1_usr))
                 return(NULL)  # Stop further processing
             }
       cos_sim_data_lib1 <- read_file_based_on_extension(cos_sim_data_lib1_path)
       cos_sim_data_lib1_proc <- cos_sim_data_lib1  # Directly use raw report data
     }
     return(cos_sim_data_lib1_proc)
+    on.exit(removeNotification(global$reset_notify_cos_sim1_usr))
   })
   
-  # Display message based on DIA-NN report data
+  # Display message based on cosine similarity data1
   observeEvent(cos_sim_data_lib1_proc(), {
     cos_sim_data_lib1_unique_pep <- length(unique(cos_sim_data_lib1_proc()$ModifiedPeptide))
     cos_sim_data_lib1_unique_pep_chr <- length(unique(paste(cos_sim_data_lib1_proc()$ModifiedPeptide, cos_sim_data_lib1_proc()$PrecursorCharge)))
@@ -625,23 +783,49 @@ observeEvent(lib1_proc(), {
   use_sample_lib2 <- reactiveVal(FALSE)
   use_sample_cos_sim_data_lib2 <- reactiveVal(FALSE)
   
-
-  # Load sample data when the action button is clicked
+################################################################################
+###loading library(2) and cosine similarity file(2), either as a sample or from user
+################################################################################
+  #loading library2 from sample, either dda or dia
   observeEvent(input$use_sample_lib2, {
     if (input$lib2_type == "DDA") {
+        global$reset_notify_dda2_SM <- showNotification(
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Loading and processing 2nd sample DDA library...
+           </div>"),
+            duration = NULL
+        ,
+        type = "message"
+        )
         sample_data_dda_lib2 <- readRDS(sample_data_dda_path)
         data_dda(sample_data_dda_lib2)
         use_sample_lib2(TRUE)
      }
     else{
+        global$reset_notify_dia2_SM <- showNotification(
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Loading and processing 2nd sample DIA library...
+           </div>"),
+            duration = NULL
+        ,
+        type = "message"
+        )
         sample_data_dia_lib2 <- readRDS(sample_data_dia_path)
         data_dia(sample_data_dia_lib2)
         use_sample_lib2(TRUE)
        }
   })
-  
-  # Load sample cosine similarity for library2 when the action button is clicked
-  observeEvent(input$use_sample_cos_sim_data_lib2, {
+  ##############################################################################
+  # Load cosine similarity file 2 from sample
+    observeEvent(input$use_sample_cos_sim_data_lib2, {
+    global$reset_notify_cos_sim2_SM <- showNotification(
+           HTML("<div style='font-size:16px;'>
+           <i class='fas fa-cogs'></i> Loading and processing 2nd sample cosine similarity scores file......
+           </div>"),
+            duration = NULL
+        ,
+        type = "message"
+        )
     sample_cos_sim_data_lib2 <- readRDS(sample_cos_sim_data_lib2_path)
     data_cos_sim_lib2(sample_cos_sim_data_lib2)
     use_sample_cos_sim_data_lib2(TRUE)
@@ -663,7 +847,7 @@ observeEvent(lib1_proc(), {
     if (use_sample_lib2()) {
       tags$div(class = "alert alert-info", "Sample Data Loaded. Upload complete.")
     } else {
-      fileInput("lib2", "Upload your library file", accept = c(".csv", ".tsv"))
+      fileInput("lib2", "Upload your library file2", accept = c(".csv", ".tsv"))
     }
   })
   
@@ -681,37 +865,59 @@ observeEvent(lib1_proc(), {
 add_log_message <- function(msg) {
     cat(msg, "\n")  # Log to console (or replace with actual logging method)
 }
-
-# Reactive value to store processed library data
+################################################################################
+#loading library(2) from user, either dda or dia
 lib2_proc <- reactive({
     if (use_sample_lib2()) {
         if (input$lib2_type == "DDA") {
             req(data_dda())
             output$msg_lib2 <- renderText(NULL)
             processed_lib2 <- process_lib(data_dda(), "DDA", input$base)
+            on.exit(removeNotification(global$reset_notify_dda2_SM))
         } else {
             req(data_dia())
             output$msg_lib2 <- renderText(NULL)
             processed_lib2 <- process_lib(data_dia(), "DIA", input$base)
+            on.exit(removeNotification(global$reset_notify_dia2_SM))
         }
     } else {
         req(input$lib2)
         output$msg_lib2 <- renderText(NULL)
+        
         # Validate library file based on type
         lib2_path <- input$lib2$datapath
         if (input$lib2_type == "DDA") {
+           global$reset_notify_dda2_usr <- showNotification(
+                 HTML("<div style='font-size:16px;'>
+                 <i class='fas fa-cogs'></i> Loading and processing 2nd DDA library file from user......
+                 </div>"),
+                 duration = NULL
+                 ,
+                 type = "message"
+            )
             is_DDA_lib2_valid <- validate_DDA_lib(lib2_path)
             if (is.character(is_DDA_lib2_valid)) {
                 add_log_message(is_DDA_lib2_valid)
                 output$msg_lib2 <- renderText(is_DDA_lib2_valid)  # Show error message in UI
+                on.exit(removeNotification(global$reset_notify_dda2_usr))
                 return(NULL)  # Stop further processing
             }
             lib2 <- read_file_based_on_extension(lib2_path)
+            on.exit(removeNotification(global$reset_notify_dda2_usr))     
         } else {
             is_DIA_lib2_valid <- validate_DIA_lib(lib2_path)
+            global$reset_notify_dia2_usr <- showNotification(
+                 HTML("<div style='font-size:16px;'>
+                 <i class='fas fa-cogs'></i> Loading and processing 2nd DDA library file from user...
+                 </div>"),
+                 duration = NULL
+                 ,
+                 type = "message"
+            )
             if (is.character(is_DIA_lib2_valid)) {
                 add_log_message(is_DIA_lib2_valid)
                 output$msg_lib2 <- renderText(is_DIA_lib2_valid)  # Show error message in UI
+                on.exit(removeNotification(global$reset_notify_dia2_usr))
                 return(NULL)
             }
             lib2 <- read_file_based_on_extension(lib2_path)
@@ -719,8 +925,8 @@ lib2_proc <- reactive({
 
         processed_lib2 <- process_lib(lib2, input$lib2_type, input$base)
     }
-    
     return(processed_lib2)
+    on.exit(removeNotification(global$reset_notify_dia2_usr))
 })
 
 # Observe validation messages separately to prevent errors inside reactive expressions
@@ -731,8 +937,7 @@ observeEvent(lib2_proc(), {
         output$msg_lib2 <- renderText("Library successfully processed.")
     }
 })
-
- ########################### 
+ ############################################################################# 
   # Display message based on processed library2 data
   observeEvent(lib2_proc(), {
     lib2_unique_pep <- length(unique(lib2_proc()$ModifiedPeptide))
@@ -744,28 +949,39 @@ observeEvent(lib2_proc(), {
     })
   })
 ###########################################################
- # Reactive value to store DIA-NN report data without processing
+ # Reactive value to store cosine similarity data file2 without processing
   cos_sim_data_lib2_proc <- reactive({
     if (use_sample_cos_sim_data_lib2()) {
       req(data_cos_sim_lib2())
       cos_sim_data_lib2_proc <- data_cos_sim_lib2()  # Directly use raw report data
+      on.exit(removeNotification(global$reset_notify_cos_sim2_SM))
     } else {
       req(input$cos_sim_data_lib2)
       output$msg_cos2 <- renderText(NULL)
+      global$reset_notify_cos_sim2_usr <- showNotification(
+                 HTML("<div style='font-size:16px;'>
+                 <i class='fas fa-cogs'></i> Loading and processing 2nd cosine similarity scores file from user...
+                 </div>"),
+                 duration = NULL
+                 ,
+                 type = "message"
+            )
       cos_sim_data_lib2_path <- input$cos_sim_data_lib2$datapath
       is_cos_sim_data_lib2_valid <- validate_cos_sim_data_lib(cos_sim_data_lib2_path)
             if (is.character(is_cos_sim_data_lib2_valid)) {
                 add_log_message(is_cos_sim_data_lib2_valid)
                 output$msg_cos2 <- renderText(is_cos_sim_data_lib2_valid)  # Show error message in UI
+                on.exit(removeNotification(global$reset_notify_cos_sim2_usr))
                 return(NULL)  # Stop further processing
             }
       cos_sim_data_lib2 <- read_file_based_on_extension(cos_sim_data_lib2_path)
       cos_sim_data_lib2_proc <- cos_sim_data_lib2  # Directly use raw report data
     }
     return(cos_sim_data_lib2_proc)
+    on.exit(removeNotification(global$reset_notify_cos_sim2_usr))
   })
   
-  # Display message based on DIA-NN report data
+  # Display message based on cosine similarity file2, either as sample or uploaded from user
   observeEvent(cos_sim_data_lib2_proc(), {
     cos_sim_data_lib2_unique_pep <- length(unique(cos_sim_data_lib2_proc()$ModifiedPeptide))
     cos_sim_data_lib2_unique_pep_chr <- length(unique(paste(cos_sim_data_lib2_proc()$ModifiedPeptide, cos_sim_data_lib2_proc()$PrecursorCharge)))
@@ -780,6 +996,14 @@ observeEvent(lib2_proc(), {
 cos_sim_compare <- eventReactive(input$compare,{
              req(cos_sim_data_lib1_proc())
              req(cos_sim_data_lib2_proc())
+             global$notify_cos_sim_compare <- showNotification(
+                 HTML("<div style='font-size:16px;'>
+                 <i class='fas fa-cogs'></i> Starting the comparision of the uploaded 2 cosine similarity files generated from 2 differnt libraries...
+                 </div>"),
+                 duration = NULL
+                 ,
+                 type = "message"
+            )
              cos_sim_compare <- summarize_cos_sim(cos_sim_data_lib1_proc(), cos_sim_data_lib2_proc())
             return(cos_sim_compare)
     })
@@ -792,6 +1016,7 @@ observeEvent(cos_sim_compare(),{
                       ggplot(cos_sim_compare(), aes(cosine_similarity_mad, fill = cat)) + geom_histogram(alpha = 0.5, position = 'identity') + theme_bw() + theme(text = element_text(size = 16)) + facet_wrap(pep_cou ~ ., scales = "free")
 
                },cacheKeyExpr = { cos_sim_compare() })
+              on.exit(removeNotification(global$notify_cos_sim_compare))
       })
 #####################################################################
 best_in_lib1_lib2 <- eventReactive(input$compare,{
@@ -808,7 +1033,7 @@ observeEvent(best_in_lib1_lib2(),{
                 }
                  },cacheKeyExpr = {best_in_lib1_lib2() })  
                      
-                   
+         on.exit(removeNotification(global$notify_cos_sim_compare))          
   })
 #######################
 retrieved_from_lib <- eventReactive(input$retrieve,{
@@ -840,12 +1065,12 @@ observeEvent(input$file_type,{
             
               if(input$file_type == "DDA Library"){
                     output$msg7 <- renderText({
-                      paste0("for proper data processing;\nDDA library file should contain the following columns;\nModifiedPeptide\nUniprotID\nPrecursorMz\nPrecursorCharge\nFragmentMz\nFragmentCharge\nRelativeIntensity\nFragmentType\nFragmentSeriesNumber\nFragmentLossType")
+                      paste0("for proper data processing;\nDDA library file should contain the following columns;\nModifiedPeptide\nRetentionTime\nUniprotID\nPrecursorMz\nPrecursorCharge\nFragmentMz\nFragmentCharge\nRelativeIntensity\nFragmentType\nFragmentSeriesNumber\nFragmentLossType")
                    })
                }
               else if(input$file_type == "DIA Library"){
                    output$msg7 <- renderText({
-                      paste0("for proper data processing;\nDIA library file should contain the following columns;\nPeptideSequence\nUniprotID\nPrecursorMz\nPrecursorCharge\nProductMz\nFragmentCharge\nLibraryIntensity\nFragmentType\nFragmentSeriesNumber\nFragmentLossType")
+                      paste0("for proper data processing;\nDIA library file should contain the following.please note the DIA library created by DIAnn contain all of the follwoing columns by default. columns;\nPeptideSequence\nTr_recalibrated\nUniprotID\nPrecursorMz\nPrecursorCharge\nProductMz\nFragmentCharge\nLibraryIntensity\nFragmentType\nFragmentSeriesNumber\nFragmentLossType")
                   })
                }
               else if(input$file_type == "DIAnn Report"){
