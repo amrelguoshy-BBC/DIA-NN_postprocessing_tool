@@ -17,6 +17,7 @@ library(shinyBS)
 library(shinyjs)
 library(shinyWidgets)
 library(data.table)
+library(shinycssloaders)
 ##############################################################
 ### Load custom functions
 source("functions.R")
