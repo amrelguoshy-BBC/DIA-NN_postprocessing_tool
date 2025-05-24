@@ -146,6 +146,11 @@ ui <- fluidPage(
         column(width = 5,
           wellPanel(
             h4(icon("flask"), " Input Parameters"),
+            radioButtons("lib_data_source", "Choose Library data source:",
+             choices = c("Sample Data" = "sample",
+                         "Upload from Computer" = "upload",
+                         "Download from Google Drive" = "gdrive"),
+             selected = "upload"),
             selectInput("lib_type", "Library Type", 
                       choices = c("DIA", "DDA" ),
                       width = "100%"),
@@ -166,6 +171,11 @@ ui <- fluidPage(
             
             fluidRow(
               column(7,
+                radioButtons("DIAnn_report_data_source", "Choose DIA-NN report data source:",
+              choices = c("Sample Data" = "sample",
+                         "Upload from Computer" = "upload",
+                         "Download from Google Drive" = "gdrive"),
+             selected = "upload"),
                 actionButton("use_sample_diann_report", "use DIA-NN Report Sample", 
                            class = "btn btn-primary btn-block",
                            icon = icon("file-import"))),

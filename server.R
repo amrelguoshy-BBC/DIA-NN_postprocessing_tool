@@ -11,12 +11,12 @@ server <- function(input, output, session){
   global <- reactiveValues(diann_report = NULL, cosine_values_flt_no_rdn = NULL, diann_report_SM = NULL, diann_report_prt = NULL, diann_report_pep = NULL, proc_lib_notify = NULL, proc_diann_report_notify = NULL, reset_notify = NULL, reset_notify_dda_SM = NULL, reset_notify_dia_SM = NULL, reset_notify_dda_usr = NULL, reset_notify_dia_usr = NULL, reset_notify_diann_report_SM = NULL, reset_notify_diann_report_usr = NULL, start_proc = NULL, reset_notify_dda1_SM = NULL, reset_notify_dda2_SM = NULL, reset_notify_dda1_usr = NULL, reset_notify_dda2_usr = NULL, reset_notify_dia1_SM = NULL, reset_notify_dia2_SM = NULL, reset_notify_dia1_usr = NULL, reset_notify_dia2_usr = NULL, reset_notify_cos_sim1_SM = NULL, reset_notify_cos_sim1_usr = NULL, reset_notify_cos_sim2_SM = NULL, reset_notify_cos_sim2_usr = NULL, notify_cos_sim_compare = NULL)
   
   # Paths to the sample data RDS files
-  sample_data_dda_path <- "data\sample_data_dda_lib.rds"
-  sample_data_dia_path <- "data\sample_data_dia_lib.rds"
-  sample_data_diann_report_path <- "data\sample_data_diann_report.rds"
-  sample_data_diann_report_1st_path <- "data\sample_data_diann_report_1st.rds"
-  sample_cos_sim_data_lib1_path <- "data\sample_data_cosine_similarity_scores_dda.RDS"
-  sample_cos_sim_data_lib2_path <- "data\sample_data_cosine_similarity_scores_dia.rds"
+  sample_data_dda_path <- "data/sample_data_dda_lib.rds"
+  sample_data_dia_path <- "data/sample_data_dia_lib.rds"
+  sample_data_diann_report_path <- "data/sample_data_diann_report.rds"
+  sample_data_diann_report_1st_path <- "data/sample_data_diann_report_1st.rds"
+  sample_cos_sim_data_lib1_path <- "data/sample_data_cosine_similarity_scores_dda.RDS"
+  sample_cos_sim_data_lib2_path <- "data/sample_data_cosine_similarity_scores_dia.rds"
   
   
   # Reactive values to track whether sample data is used

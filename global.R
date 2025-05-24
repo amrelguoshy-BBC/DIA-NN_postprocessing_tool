@@ -17,6 +17,7 @@ library(shinyBS)
 library(shinyjs)
 library(shinyWidgets)
 library(data.table)
+library(googledrive)
 ##############################################################
 ### Load custom functions
 source("functions.R")
