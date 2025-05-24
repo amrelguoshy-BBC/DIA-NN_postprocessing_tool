@@ -15,7 +15,11 @@ server <- function(input, output, session){
   sample_data_dia_path <- "data/sample_data_dia_lib.rds"
   sample_data_diann_report_path <- "data/sample_data_diann_report.rds"
   sample_data_diann_report_1st_path <- "data/sample_data_diann_report_1st.rds"
+<<<<<<< HEAD
   sample_cos_sim_data_lib1_path <- "data/sample_data_cosine_similarity_scores_dda.RDS"
+=======
+  sample_cos_sim_data_lib1_path <- "data/sample_data_cosine_similarity_scores_dda.rds"
+>>>>>>> d8f8e0344f65594de22e8bc4b73bdd2522db1167
   sample_cos_sim_data_lib2_path <- "data/sample_data_cosine_similarity_scores_dia.rds"
   
   

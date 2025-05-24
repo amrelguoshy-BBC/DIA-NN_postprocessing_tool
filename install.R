@@ -16,6 +16,6 @@ install.packages(c(
  "shinyBS",
  "shinyjs",
  "shinyWidgets",
- "data.table
-
+ "data.table",
+ "shinycssloaders"
 ))
